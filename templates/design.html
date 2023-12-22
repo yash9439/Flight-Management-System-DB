@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(45deg, #2d2d2d, #1a1a1a);
+            color: white;
+        }
+
+        #container {
+            width: 80%;
+            max-width: 600px;
+            background: linear-gradient(45deg, #333, #222);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #querySection {
+            margin-top: 20px;
+        }
+
+        #resultSection {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Flight Management System</h1>
+        <div id="querySection">
+            <label for="queryType">Select Query Type:</label>
+            <select id="queryType">
+                <option value="1">Retrieve Passengers on a Flight</option>
+                <option value="2">Retrieve Flights from a Location</option>
+                <option value="3">Retrieve Aircraft for Maintenance</option>
+                <option value="4">Baggage Tracking</option>
+                <option value="5">Check Employee Shifts</option>
+                <option value="6">Daily Flight Schedule</option>
+                <option value="7">Aircraft Tracking</option>
+
+                <!-- Add more options as needed -->
+            </select>
+
+            <div id="queryParameters">
+                <div id="queryParameters4" style="display: none;">
+                    <label for="baggageTrackingId">Enter Baggage ID:</label>
+                    <input type="text" id="baggageTrackingId" placeholder="Baggage ID">
+                </div>
+                
+                <div id="queryParameters5" style="display: none;">
+                    <label for="employeeShiftsFlightId">Enter Flight ID:</label>
+                    <input type="text" id="employeeShiftsFlightId" placeholder="Flight ID">
+                </div>
+                
+                <div id="queryParameters6" style="display: none;">
+                    <label for="flightScheduleDate">Enter Date (YYYY-MM-DD):</label>
+                    <input type="text" id="flightScheduleDate" placeholder="Date">
+                </div>
+                
+                <div id="queryParameters7" style="display: none;">
+                    <label for="aircraftTrackingFlightId">Enter Flight ID:</label>
+                    <input type="text" id="aircraftTrackingFlightId" placeholder="Flight ID">
+                </div>
+                <!-- Additional input fields based on the selected query type will be added here -->
+            </div>
+
+            <button onclick="executeQuery()">Execute Query</button>
+        </div>
+        
+        <div id="resultSection">
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function executeQuery() {
+            const queryType = document.getElementById('queryType').value;
+            let query = '';
+        
+            switch (queryType) {
+                case '1':
+                    const specificFlightId = prompt('Enter the specific flight ID:');
+                    query = `
+                        SELECT Passenger.*
+                        FROM Passenger
+                        JOIN Reservation ON Passenger.passenger_id = Reservation.passenger_id
+                        WHERE Reservation.flight_id = '${specificFlightId}';
+                    `;
+                    break;
+        
+                case '2':
+                    const specificLocation = prompt('Enter the specific location:');
+                    const givenDate = prompt('Enter the given date (YYYY-MM-DD):');
+                    query = `
+                        SELECT Flight.*
+                        FROM Flight
+                        WHERE Flight.from_location = '${specificLocation}'
+                        AND DATE(Flight.arrival_departure_time) = '${givenDate}';
+                    `;
+                    break;
+        
+                case '3':
+                    query = `
+                        SELECT Airplane.*
+                        FROM Airplane
+                        JOIN Maintenance_History ON Airplane.airplane_number = Maintenance_History.airplane_number
+                        WHERE Maintenance_History.date BETWEEN CURDATE() AND CURDATE() + INTERVAL 7 DAY;
+                    `;
+                    break;
+        
+                    case '4':
+                    const baggageTrackingId = prompt('Enter the baggage ID:');
+                    query = `
+                    SELECT Reservation.id, Passenger.name
+                    FROM Reservation
+                    JOIN Passenger ON Reservation.passenger_id = Passenger.passenger_id
+                    JOIN Baggage ON Passenger.passenger_id = Baggage.passenger_id
+                    WHERE Baggage.tag_index = '${baggageTrackingId}';
+                    `;
+                    break;
+                
+                case '5':
+                    const employeeShiftsFlightId = prompt('Enter the flight ID:');
+                    query = `
+                        SELECT Employee.e_name, Employee.phone_number
+                        FROM Employee
+                        JOIN Flight ON Employee.employee_id = Flight.id
+                        WHERE Flight.id = '${employeeShiftsFlightId}';
+                    `;
+                    break;
+                
+                case '6':
+                    const flightScheduleDate = prompt('Enter the date (YYYY-MM-DD):');
+                    query = `
+                    SELECT Flight.arrival_departure_time, Flight.from_location, Flight.to_location
+                    FROM Flight
+                    WHERE DATE(Flight.arrival_departure_time) = '${flightScheduleDate}'
+                    ORDER BY Flight.arrival_departure_time;
+                `;
+                
+                    break;
+                
+                case '7':
+                    const aircraftTrackingFlightId = prompt('Enter the flight ID:');
+                    query = `
+                        SELECT Airplane.airplane_number, Airplane.airplane_model
+                        FROM Airplane
+                        JOIN Flight ON Airplane.airplane_number = Flight.airplane_number
+                        WHERE Flight.id = '${aircraftTrackingFlightId}';
+                    `;
+                    break;
+                
+                // Add more cases as needed
+        
+                default:
+                    break;
+            }
+        
+            try {
+                const response = await fetch('http://localhost:5000/execute_query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+        
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error fetching data from the server.');
+            }
+        }
+        
+        function displayResult(result) {
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = '';
+
+            if (result.length === 0) {
+                resultContainer.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            const headerRow = table.insertRow(0);
+
+            // Create header cells dynamically based on queryType
+        const columnHeaders = Object.keys(result[0]);
+        for (const header of columnHeaders) {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        }
+            // Create data rows
+            for (const row of result) {
+                const tr = table.insertRow();
+                for (const key in row) {
+                    const td = tr.insertCell();
+                    td.textContent = row[key];
+                }
+            }
+
+            resultContainer.appendChild(table);
+        }
+    </script>
+</body>
+</html>
